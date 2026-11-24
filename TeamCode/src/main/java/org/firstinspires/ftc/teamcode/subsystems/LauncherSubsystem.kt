@@ -1,10 +1,10 @@
 package org.firstinspires.ftc.teamcode.subsystems
 
-import com.acmerobotics.dashboard.FtcDashboard
-import com.acmerobotics.dashboard.telemetry.MultipleTelemetry
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.HardwareMap
+import com.qualcomm.robotcore.hardware.VoltageSensor
+import com.qualcomm.robotcore.util.ElapsedTime
 import com.seattlesolvers.solverslib.command.SubsystemBase
 import com.seattlesolvers.solverslib.gamepad.GamepadEx
 import com.seattlesolvers.solverslib.gamepad.GamepadKeys
@@ -13,82 +13,86 @@ import kotlin.math.abs
 
 class LauncherSubsystem(
     val hardwareMap: HardwareMap,
-    val gamepad: GamepadEx,       // gp 1 controls the speed
-    baseTelemetry: Telemetry
+    val gamepad: GamepadEx,
+    private val telemetry: Telemetry
 ) : SubsystemBase() {
 
     private val rawMotor: DcMotorEx = hardwareMap.get(DcMotorEx::class.java, "launcherMotor")
-    val dashboardTelemetry = MultipleTelemetry(baseTelemetry, FtcDashboard.getInstance().telemetry)
+    private val voltageSensor: VoltageSensor = hardwareMap.voltageSensor.iterator().next()
+    private val timer = ElapsedTime()
 
     var speed: Double = 0.0
-    private var p1PreviousA = false
-    private var p1PreviousB = false
-    private var p1PreviousX = false // this tracks the x button
+    var driverOffset: Double = 0.0
 
+    private var filteredTps = 0.0
     private var errorSum = 0.0
-    private var lastError = 0.0
+    private var batteryVoltage = 12.0
+    private var voltageTimer = 0.5
+
+    private var prevA = false
+    private var prevB = false
+    private var prevX = false
+    private var prevUp = false
+    private var prevDown = false
 
     init {
         rawMotor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         rawMotor.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
     }
 
-    // Allows commands to read the current speed
-    fun getCurrentRpm(): Double {
-        val currentTicksPerSecond = rawMotor.velocity
-        return currentTicksPerSecond * 60.0 / 28.0
-    }
+    fun getCurrentRpm(): Double = filteredTps * 60.0 / 28.0
 
     override fun periodic() {
-        val p1CurrentB = gamepad.getButton(GamepadKeys.Button.B)
-        val p1CurrentA = gamepad.getButton(GamepadKeys.Button.A)
-        val p1CurrentX = gamepad.getButton(GamepadKeys.Button.X)
+        var dt = timer.seconds()
+        timer.reset()
+        if (dt > 0.5) dt = 0.0
 
-        // changes target speed with a and b, or instantly goes to 2600 with x
-        if (p1CurrentA && !p1PreviousA && speed <= 5500) speed += 100
-        if (p1CurrentB && !p1PreviousB && speed >= 500) speed -= 100
-        if (p1CurrentX && !p1PreviousX) speed = 2600.0
-
-        p1PreviousA = p1CurrentA
-        p1PreviousB = p1CurrentB
-        p1PreviousX = p1CurrentX
-
-        // FIXED: Restored the missing multiplication (*) sign
-        val targetTicksPerSecond = speed * 28.0 / 60.0
-        val currentTicksPerSecond = rawMotor.velocity
-
-        val error = targetTicksPerSecond - currentTicksPerSecond
-
-        // Prevent overshooting: only track total error when within ~200 RPM of target
-        // FIXED: Restored the missing multiplication (*) sign
-        if (abs(error) < (200.0 * 28.0 / 60.0)) {
-            errorSum += error
-        } else {
-            errorSum = 0.0
+        voltageTimer += dt
+        if (voltageTimer >= 0.5) {
+            val v = voltageSensor.voltage
+            if (v > 0.0) batteryVoltage = v
+            voltageTimer = 0.0
         }
 
-        val derivative = error - lastError
-        lastError = error
+        val a = gamepad.getButton(GamepadKeys.Button.A)
+        val b = gamepad.getButton(GamepadKeys.Button.B)
+        val x = gamepad.getButton(GamepadKeys.Button.X)
+        val up = gamepad.getButton(GamepadKeys.Button.DPAD_UP)
+        val down = gamepad.getButton(GamepadKeys.Button.DPAD_DOWN)
 
-        // this pulls your final tuned numbers straight from LauncherConstants
-        val feedforward = targetTicksPerSecond * LauncherConstants.kF
-        val proportional = error * LauncherConstants.kP
+        if (a && !prevA && speed <= 5500) speed += 100
+        if (b && !prevB && speed >= 500) speed -= 100
+        if (x && !prevX) speed = 2600.0
+        if (up && !prevUp) driverOffset += 25.0
+        if (down && !prevDown) driverOffset -= 25.0
 
-        // FIXED: Restored the missing multiplication (*) sign
-        val integral = errorSum * LauncherConstants.kI
-        val derivTerm = derivative * LauncherConstants.kD
+        prevA = a; prevB = b; prevX = x
+        prevUp = up; prevDown = down
 
-        // make sure power is clamped between 0 and 1
-        var motorPower = feedforward + proportional + integral + derivTerm
-        motorPower = motorPower.coerceIn(0.0, 1.0)
+        filteredTps = (0.3 * rawMotor.velocity) + (0.7 * filteredTps)
 
-        rawMotor.power = motorPower
+        val effectiveSpeed = if (speed > 0.0) (speed + driverOffset).coerceAtLeast(0.0) else 0.0
+        val targetTps = effectiveSpeed * 28.0 / 60.0
+        val error = targetTps - filteredTps
 
-        val actualRpm = currentTicksPerSecond * 60.0 / 28.0
+        if (abs(error) < 95.0) errorSum += error * dt else errorSum = 0.0
 
-        dashboardTelemetry.addData("Target RPM", speed)
-        dashboardTelemetry.addData("Actual RPM", actualRpm)
-        dashboardTelemetry.addData("Motor Power", motorPower)
-        dashboardTelemetry.update()
+        val rawPower = (targetTps * LauncherConstants.kF) +
+                (error * LauncherConstants.kP) +
+                (errorSum * LauncherConstants.kI)
+
+        val compensatedPower = rawPower * (12.0 / batteryVoltage)
+        rawMotor.power = compensatedPower.coerceIn(0.0, 1.0)
+
+        telemetry.addData("Target RPM", effectiveSpeed)
+        telemetry.addData("Actual RPM", getCurrentRpm())
+        telemetry.addData("Driver Offset", driverOffset)
+        telemetry.addData("Voltage", "%.2fV", batteryVoltage)
+
+        telemetry.addData("Live kF", LauncherConstants.kF)
+        telemetry.addData("Live kP", LauncherConstants.kP)
+        telemetry.addData("Live kI", LauncherConstants.kI)
+        telemetry.addData("Live kD", LauncherConstants.kD)
+        telemetry.addData("Power", compensatedPower)
     }
 }

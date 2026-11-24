@@ -16,11 +16,6 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
-/**
- * Pedro Pathing 3.0 constants. The values below are placeholders: run the AutoTune procedures in
- * {@link Tuning} (see https://pedropathing.com/docs/pathing/tuning) and paste the generated configs here.
- * If you use a different drivetrain or localizer, swap the config classes and {@link #createFollower} to match.
- */
 public class Constants {
     public static MecanumConfig drivetrainConfig = new MecanumConfig(c -> {
         c.frontLeftName.set("frontLeft");
@@ -32,6 +27,7 @@ public class Constants {
         c.backLeftDirection.set(DcMotorSimple.Direction.REVERSE);
         c.backRightDirection.set(DcMotorSimple.Direction.FORWARD);
     });
+
     public static PinpointConfig localizerConfig = new PinpointConfig(c -> {
         c.name.set("pinpoint");
         c.podType.set(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
@@ -43,20 +39,12 @@ public class Constants {
         c.offsetUnits.set(DistanceUnit.INCH);
     });
 
-    public static Follower createFollower(HardwareMap hardwareMap) {
-        return new Follower(
-                new PinpointLocalizer(hardwareMap, localizerConfig),
-                new Mecanum(hardwareMap, drivetrainConfig),
-                new Foresight(foresightConfig)
-        );
-    }
-
     public static ForesightConfig foresightConfig = new ForesightConfig(
             c -> {
                 Controller primaryTranslationalForward = Controller.proportional(0.25148161392953683);
-                Controller secondaryTranslationalForward = Controller.proportional(0.09291573663448095);
+                Controller secondaryTranslationalForward = Controller.proportional(0.055);
                 Controller primaryTranslationalLateral = Controller.proportional(0.3625655840983413);
-                Controller secondaryTranslationalLateral = Controller.proportional(0.13395829539350482);
+                Controller secondaryTranslationalLateral = Controller.proportional(0.08);
 
                 c.forwardTranslational.set(Controller.piecewise(secondaryTranslationalForward).put(2.5, primaryTranslationalForward));
                 c.strafeTranslational.set(Controller.piecewise(secondaryTranslationalLateral).put(2.5, primaryTranslationalLateral));
@@ -64,7 +52,7 @@ public class Constants {
                 c.coast.set(Controller.proportionalFeedforward(0.013111375085565665));
                 c.brake.set(Controller.proportionalFeedforward(0.011144668822730816));
 
-                c.headingFeedback.set(Controller.proportional(5.906202753495809));
+                c.headingFeedback.set(Controller.proportional(3.2));
                 c.headingBrakeCoefficients.set(Vector2D.cartesian(0.04348867321073195, 0.008036196655243215));
 
                 c.linearBrakeCoefficients.set(Matrix.diag(0.044479680485817595, 0.0660328309955904));
@@ -77,11 +65,15 @@ public class Constants {
             }
     );
 
-    public static Follower create(HardwareMap h) {
+    public static Follower createFollower(HardwareMap hardwareMap) {
         return new Follower(
-                new PinpointLocalizer(h, localizerConfig),
-                new Mecanum(h, drivetrainConfig),
+                new PinpointLocalizer(hardwareMap, localizerConfig),
+                new Mecanum(hardwareMap, drivetrainConfig),
                 new Foresight(foresightConfig)
         );
+    }
+
+    public static Follower create(HardwareMap h) {
+        return createFollower(h);
     }
 }

@@ -29,9 +29,9 @@ class DriveSubsystem(val hardwareMap: HardwareMap, val gamepad: GamepadEx, val t
     }
 
     override fun periodic() {
-        telemetry.addData("Good 1:", frontRight.velocity)
-        telemetry.addData("Good 2:", frontLeft.velocity)
-        telemetry.addData("Good 3:", backLeft.velocity)
-        telemetry.addData("Bad one:", backRight.velocity)
+        telemetry.addData("frontRight Velo: ", frontRight.velocity)
+        telemetry.addData("frontLeft Velo: ", frontLeft.velocity)
+        telemetry.addData("backleft Velo: ", backLeft.velocity)
+        telemetry.addData("Backright Velo: ", backRight.velocity)
     }
 }

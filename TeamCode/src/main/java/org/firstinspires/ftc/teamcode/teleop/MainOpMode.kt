@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.teleop
 
+import com.qualcomm.hardware.lynx.LynxModule
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import com.seattlesolvers.solverslib.command.CommandOpMode
 import com.seattlesolvers.solverslib.gamepad.GamepadEx
@@ -21,23 +22,30 @@ class MainOpMode : CommandOpMode() {
     private lateinit var gamepad2Ex: GamepadEx
 
     override fun initialize() {
-        gamepad1Ex = GamepadEx(gamepad1) // User 1
-        gamepad2Ex = GamepadEx(gamepad2) // User 2
+        for (hub in hardwareMap.getAll(LynxModule::class.java)) {
+            hub.bulkCachingMode = LynxModule.BulkCachingMode.AUTO
+        }
 
-        // Drive and Intake get Gamepad 1. Launcher gets Gamepad 2.
+        gamepad1Ex = GamepadEx(gamepad1)
+        gamepad2Ex = GamepadEx(gamepad2)
+
         driveSubsystem = DriveSubsystem(hardwareMap, gamepad1Ex, telemetry)
         intakeSubsystem = IntakeSubsystem(hardwareMap, gamepad1Ex, telemetry)
         launcherSubsystem = LauncherSubsystem(hardwareMap, gamepad2Ex, telemetry)
 
         launcherSubsystem.speed = 0.0
-        intakeSubsystem.speed = 0.0
+        intakeSubsystem.speed = 100.0
 
         register(driveSubsystem, launcherSubsystem, intakeSubsystem)
 
         driveSubsystem.defaultCommand = DriveDefaultCommand(driveSubsystem, gamepad1Ex)
 
-        // Binds the automated launch sequence to the Y button on Gamepad 2
         gamepad2Ex.getGamepadButton(GamepadKeys.Button.Y)
             .whenPressed(LaunchSequenceCommand(launcherSubsystem, intakeSubsystem))
+    }
+
+    override fun run() {
+        super.run()
+        telemetry.update()
     }
 }

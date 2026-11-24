@@ -21,7 +21,7 @@ class IntakeRampSubsystem(
     private val ANGLE_60_CCW = ANGLE_STRAIGHT_UP + 45.0
 
     init {
-        servo = ServoEx(hardwareMap, "flowerRamp", 180.0)
+        servo = ServoEx(hardwareMap, "flowerRamp", 360.0)
 
         servo.set(ANGLE_STRAIGHT_UP)
 

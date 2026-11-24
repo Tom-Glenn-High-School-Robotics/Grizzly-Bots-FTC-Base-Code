@@ -32,7 +32,7 @@ class SimpleAuto : LinearOpMode() {
             sleep(3000)
 
             setMotorPowers(-0.3)
-            sleep(3000)
+            sleep(2000)
 
             setMotorPowers(0.0)
         }
