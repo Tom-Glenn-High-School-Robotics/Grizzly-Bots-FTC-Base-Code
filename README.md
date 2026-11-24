@@ -1,17 +1,16 @@
-<div align="center">
-
 # Grizzly Bots — FTC Base Code
+
 **2026–2027 BIOBUZZ Season | FTC Team 11918 (Arcturus)**
 
 Competition robot code for the Tom Glenn High School robotics program. Handles robot control, autonomous pathing, live tuning, and AprilTag vision.
+
+> **Looking for our custom code?** Jump straight to [`TeamCode`](TeamCode/src/main/java/org/firstinspires/ftc/teamcode) (subsystems, Pedro Pathing constants, and match OpModes).
 
 ![Kotlin](https://img.shields.io/badge/Kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)
 ![Java](https://img.shields.io/badge/Java-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
 ![Android SDK](https://img.shields.io/badge/Android_SDK-3DDC84?style=for-the-badge&logo=android&logoColor=white)
 ![SolversLib](https://img.shields.io/badge/SolversLib-181717?style=for-the-badge)
 ![Pedro Pathing](https://img.shields.io/badge/Pedro_Pathing-0A66C2?style=for-the-badge)
-
-</div>
 
 ---
 
@@ -81,9 +80,9 @@ TeamCode/src/main/java/org/firstinspires/ftc/teamcode/
 **Requirements:** Android Studio (Narwhal 3 Feature Drop or later) and JDK 17+.
 
 1. Clone the repo:
-   ```bash
-   git clone [https://github.com/Tom-Glenn-High-School-Robotics/Grizzly-Bots-FTC-Base-Code.git](https://github.com/Tom-Glenn-High-School-Robotics/Grizzly-Bots-FTC-Base-Code.git)
-   ```
+```bash
+git clone [https://github.com/Tom-Glenn-High-School-Robotics/Grizzly-Bots-FTC-Base-Code.git](https://github.com/Tom-Glenn-High-School-Robotics/Grizzly-Bots-FTC-Base-Code.git)
+```
 2. Open the folder in Android Studio and let Gradle sync.
 3. Connect to the REV Control Hub over USB or Wi-Fi Direct and run `TeamCode`.
 4. Open `http://192.168.43.1:8080/dash` in a browser while connected to the robot for live telemetry and tuning.
