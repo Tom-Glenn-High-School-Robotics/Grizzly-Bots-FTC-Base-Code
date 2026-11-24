@@ -81,7 +81,7 @@ TeamCode/src/main/java/org/firstinspires/ftc/teamcode/
 
 1. Clone the repo:
 ```bash
-git clone [https://github.com/Tom-Glenn-High-School-Robotics/Grizzly-Bots-FTC-Base-Code.git](https://github.com/Tom-Glenn-High-School-Robotics/Grizzly-Bots-FTC-Base-Code.git)
+git clone https://github.com/Tom-Glenn-High-School-Robotics/Grizzly-Bots-FTC-Base-Code.git
 ```
 2. Open the folder in Android Studio and let Gradle sync.
 3. Connect to the REV Control Hub over USB or Wi-Fi Direct and run `TeamCode`.
