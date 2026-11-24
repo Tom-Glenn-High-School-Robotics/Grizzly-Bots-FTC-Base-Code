@@ -35,7 +35,7 @@ flowchart LR
 
     subgraph Subsystems["Hardware-Isolated Subsystems"]
         DT["Drivetrain"]
-        INT["Intake & Spindexer"]
+        INT["Intake & Linear Indexer"]
         TUR["Hooded Flywheel Turret"]
     end
 
