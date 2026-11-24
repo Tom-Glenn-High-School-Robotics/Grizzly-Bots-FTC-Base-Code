@@ -94,8 +94,7 @@ TeamCode/src/main/java/org/firstinspires/ftc/teamcode/
 
 * **Pathing & Odometry Calibration:** Tuned dead-wheel odometry localization, translational/heading PIDF controllers, and centripetal force scaling via FTC Dashboard live graphs to minimize drift over full-field runs.
 * **Hardware-in-the-Loop Verification:** Every subsystem change is validated against live telemetry (target vs. actual velocity, pose error, loop cycle time) before merging into `master`.
-* **Unit Testing *(In Progress)*:** Extracting hardware-independent math (angle wrapping, pose transforms, state transitions) into pure Kotlin/Java utilities for automated JUnit testing.
-
+  
 ---
 
 ## Getting Started
