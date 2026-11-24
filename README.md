@@ -1,39 +1,39 @@
 <div align="center">
 
-# Grizzly Bots — FTC Competition Base Code
-**2026–2027 BIOBUZZ Season | FIRST Tech Challenge Team 11918 (Arcturus)**
+# Grizzly Bots — FTC Base Code
+**2026–2027 BIOBUZZ Season | FTC Team 11918 (Arcturus)**
 
-Standardized command-based robot control, closed-loop path following, real-time telemetry, and vision-assisted localization for the Tom Glenn High School robotics program.
+Competition robot code for the Tom Glenn High School robotics program. Handles robot control, autonomous pathing, live tuning, and AprilTag vision.
 
 ![Kotlin](https://img.shields.io/badge/Kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)
 ![Java](https://img.shields.io/badge/Java-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
 ![Android SDK](https://img.shields.io/badge/Android_SDK-3DDC84?style=for-the-badge&logo=android&logoColor=white)
-![SolversLib](https://img.shields.io/badge/Architecture-SolversLib-181717?style=for-the-badge)
-![Pedro Pathing](https://img.shields.io/badge/Pathing-Pedro_Pathing-0A66C2?style=for-the-badge)
+![SolversLib](https://img.shields.io/badge/SolversLib-181717?style=for-the-badge)
+![Pedro Pathing](https://img.shields.io/badge/Pedro_Pathing-0A66C2?style=for-the-badge)
 
 </div>
 
 ---
 
-## System Architecture
+## How It Works
 
-The codebase decouples hardware I/O, control logic, and autonomous scheduling so multiple programmers can iterate on subsystems in parallel without merge conflicts or regressions.
+Each mechanism on the robot lives in its own class, separate from the autonomous and driver-controlled modes. This lets multiple programmers work on different parts of the robot at the same time without breaking each other's code.
 
 ```mermaid
 flowchart LR
-    subgraph Input["Sensors & Localization"]
+    subgraph Input["Inputs"]
         ODOM["Dead-Wheel Odometry"]
-        LL["Limelight 3A (AprilTags / Vision)"]
+        LL["Limelight 3A (AprilTags)"]
         GP["Driver Gamepads"]
     end
 
-    subgraph Core["Control & Scheduling (SolversLib + Marrow)"]
-        PP["Pedro Pathing Follower"]
+    subgraph Core["Control (SolversLib + Marrow)"]
+        PP["Pedro Pathing"]
         CMD["Command Scheduler"]
-        DASH["FTC Dashboard Telemetry"]
+        DASH["FTC Dashboard"]
     end
 
-    subgraph Subsystems["Hardware-Isolated Subsystems"]
+    subgraph Subsystems["Robot Mechanisms"]
         DT["Drivetrain"]
         INT["Intake & Linear Indexer"]
         TUR["Hooded Flywheel Turret"]
@@ -50,64 +50,40 @@ flowchart LR
     CMD <--> DASH
 ```
 
-### Repository Layout
+### Folder Structure
 
 ```text
 TeamCode/src/main/java/org/firstinspires/ftc/teamcode/
-├── subsystems/        # Hardware-isolated modules exposing command interfaces
-├── pedroPathing/      # Tuned odometry constants, follower parameters, and feedforward profiles
-└── opmodes/           # Thin, declarative Autonomous and TeleOp command sequences
+├── subsystems/        # Individual robot mechanisms (drivetrain, intake, turret)
+├── pedroPathing/      # Odometry settings, path follower constants, and tuning files
+└── opmodes/           # Autonomous and TeleOp match programs
 ```
 
 ---
 
-## Tech Stack
+## Key Design Choices
 
-| Layer | Technology | Purpose |
-| :--- | :--- | :--- |
-| **Language & Runtime** | Kotlin / Java (Android SDK) | Core robot control, subsystems, and OpModes |
-| **Architecture** | [SolversLib](https://github.com/FTC-23511/SolversLib-Quickstart) | Command-based subsystem isolation and scheduling |
-| **Autonomous Pathing** | Pedro Pathing | Bezier curve trajectory generation and closed-loop following |
-| **State & Utilities** | Marrow | Streamlined hardware abstractions and state management |
-| **Telemetry & Tuning** | FTC Dashboard | Live PID/feedforward tuning, field pose visualization, and graphing |
-| **Vision** | Limelight 3A | AprilTag localization and game-piece detection |
+* **Command-Based Code ([SolversLib](https://github.com/FTC-23511/SolversLib-Quickstart) + Marrow) instead of Linear OpModes:** Takes a bit more setup up front, but keeps mechanisms from interfering with each other and makes it easy to run actions at the same time (like spinning up the shooter while driving a path).
+* **Pedro Pathing instead of basic waypoint driving:** Uses reactive Bezier curves instead of rigid timed paths. You give up exact fixed-time runs, but the robot recovers much better from wheel slip and collisions.
+* **Live Tuning with FTC Dashboard:** PID values, flywheel speeds, and pathing constants can be adjusted live from a browser instead of rebuilding and re-uploading code to the robot for every small change.
 
 ---
 
-## Key Engineering Decisions & Trade-offs
+## Testing & Tuning
 
-> [!NOTE]
-> **Command-Based Architecture (SolversLib + Marrow) over Linear OpModes**  
-> Moving away from monolithic loop-based OpModes added initial boilerplate, but eliminated state-bleed bugs between mechanisms and enabled concurrent actions (e.g., spinning up the shooter while tracking a path).
-
-> [!NOTE]
-> **Pedro Pathing over Standard Odometry Waypoints**  
-> Chose reactive Bezier curve following over strict time-parameterized trajectories, trading away fixed-time predictability in favor of much stronger recovery from field collisions and wheel slip.
-
-> [!NOTE]
-> **Live Telemetry via FTC Dashboard**  
-> Externalized tuning constants (PID gains, flywheel RPM targets, pathing tolerances) to iterate on control loops in seconds rather than rebuilding and redeploying the Android APK for every tweak.
+* **Odometry & Pathing:** Calibrated dead-wheel tracking, PIDF controllers, and turn/centripetal constants using FTC Dashboard graphs to keep drift low across full-field runs.
+* **Match-Ready Checks:** Changes are tested on the robot against live telemetry (target vs. actual motor speed, field position error, and loop time) before being merged into `master`.
 
 ---
 
-## Testing & Validation
+## Setup
 
-* **Pathing & Odometry Calibration:** Tuned dead-wheel odometry localization, translational/heading PIDF controllers, and centripetal force scaling via FTC Dashboard live graphs to minimize drift over full-field runs.
-* **Hardware-in-the-Loop Verification:** Every subsystem change is validated against live telemetry (target vs. actual velocity, pose error, loop cycle time) before merging into `master`.
-  
----
+**Requirements:** Android Studio (Narwhal 3 Feature Drop or later) and JDK 17+.
 
-## Getting Started
-
-### Prerequisites
-* Android Studio (Narwhal 3 Feature Drop or later)
-* JDK 17+
-
-### Setup
-1. Clone the repository:
+1. Clone the repo:
    ```bash
    git clone [https://github.com/Tom-Glenn-High-School-Robotics/Grizzly-Bots-FTC-Base-Code.git](https://github.com/Tom-Glenn-High-School-Robotics/Grizzly-Bots-FTC-Base-Code.git)
    ```
-2. Open the project in Android Studio and allow Gradle to sync dependencies.
-3. Connect to the REV Control Hub via USB or Wi-Fi Direct and run the `TeamCode` configuration.
-4. Open live telemetry and tuning at `http://192.168.43.1:8080/dash` while connected to the robot controller.
+2. Open the folder in Android Studio and let Gradle sync.
+3. Connect to the REV Control Hub over USB or Wi-Fi Direct and run `TeamCode`.
+4. Open `http://192.168.43.1:8080/dash` in a browser while connected to the robot for live telemetry and tuning.
