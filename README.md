@@ -80,9 +80,9 @@ TeamCode/src/main/java/org/firstinspires/ftc/teamcode/
 **Requirements:** Android Studio (Narwhal 3 Feature Drop or later) and JDK 17+.
 
 1. Clone the repo:
-```bash
+
 git clone https://github.com/Tom-Glenn-High-School-Robotics/Grizzly-Bots-FTC-Base-Code.git
-```
+
 2. Open the folder in Android Studio and let Gradle sync.
 3. Connect to the REV Control Hub over USB or Wi-Fi Direct and run `TeamCode`.
 4. Open `http://192.168.43.1:8080/dash` in a browser while connected to the robot for live telemetry and tuning.
